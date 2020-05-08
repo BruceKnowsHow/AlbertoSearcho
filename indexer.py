@@ -9,6 +9,9 @@ import time
 corpus_folder = os.path.join(os.getcwd(), 'developer')
 index_folder = os.path.join(os.getcwd(), 'Index')
 
+if (not os.path.exists(index_folder)):
+	os.makedirs(index_folder)
+
 partition_mapfile = os.path.join(index_folder, 'map.json')
 
 PARTITION_COUNT = 100
