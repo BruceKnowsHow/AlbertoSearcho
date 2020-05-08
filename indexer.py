@@ -17,6 +17,8 @@ partition_mapfile = os.path.join(index_folder, 'map.json')
 PARTITION_COUNT = 100
 ACTIVE_PARTITIONS = 100
 
+MAX_DOCUMENTS = 100000
+
 start_time = time.time()
 
 class InvertedIndex:
@@ -135,7 +137,7 @@ def build_partition_map():
 			print('\rProcessing document number: ' + str(doc_count) + ', unique tokens so far: ' + str(len(all_freqs_dict)) + ', seconds: ' + str(time.time() - start_time), end='')
 			
 			doc_count += 1
-			if (doc_count > 1000):
+			if (doc_count > MAX_DOCUMENTS):
 				break
 		else:
 			continue
@@ -191,7 +193,7 @@ def main():
 			
 			print('\rProcessing document number: ' + str(doc_count) + ', seconds: ' + str(time.time() - start_time), end='')
 			doc_count += 1
-			if (doc_count > 1000):
+			if (doc_count > MAX_DOCUMENTS):
 				break
 		else:
 			continue
