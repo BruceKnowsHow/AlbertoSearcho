@@ -54,7 +54,8 @@ def BuildIndexFragments(corpus_folder):
 		freq_dict = token_freqs(text_tokens)
 		
 		for k,v in freq_dict.items():
-			inverted_index[k].append([doc_id, v])
+			posting = [doc_id, v]    # THIS IS THE POSTING
+			inverted_index[k].append(posting)
 			url_dict[doc_id] = json_dict['url']
 		
 		if (doc_id % DOCS_PER_FRAGMENT == DOCS_PER_FRAGMENT - 1):
@@ -83,6 +84,9 @@ def BuildIndexFragments(corpus_folder):
 
 def main():
 	inverted_index, url_dict = BuildIndexFragments(corpus_folder)
+	
+	with open('index.json', 'w') as fp:
+		json.dump(inverted_index, fp, indent=True)
 	
 	# frag_list = []
 	# for filename in glob.iglob(index_folder + '/*.json'):
