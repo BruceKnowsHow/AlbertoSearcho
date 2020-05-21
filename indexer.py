@@ -11,8 +11,8 @@ import glob
 corpus_folder = os.path.join(os.getcwd(), 'developer')
 index_folder = os.path.join(os.getcwd(), 'index')
 
-MAX_DOCUMENTS = 1000
-DOCS_PER_FRAGMENT = 100
+MAX_DOCUMENTS = 100000
+DOCS_PER_FRAGMENT = 500
 
 start_time = time.time()
 
@@ -106,7 +106,7 @@ def main():
 	
 	seek_dict = {}
 	
-	while (all([line != '' for line in curr_lines])):
+	while any([line != '' for line in curr_lines]):
 		curr_phrases = [json.loads(l) for l in curr_lines]
 		curr_phrase = sorted(curr_phrases, key=lambda x: x[0], reverse=True)[0][0]
 		active = [phrase[0] == curr_phrase for phrase in curr_phrases]
