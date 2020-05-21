@@ -11,12 +11,8 @@ import glob
 corpus_folder = os.path.join(os.getcwd(), 'developer')
 index_folder = os.path.join(os.getcwd(), 'index')
 
-if (os.path.exists(index_folder)):
-	shutil.rmtree(index_folder)
-os.makedirs(index_folder)
-
-MAX_DOCUMENTS = 100000
-DOCS_PER_FRAGMENT = 100000
+MAX_DOCUMENTS = 1000
+DOCS_PER_FRAGMENT = 100
 
 start_time = time.time()
 
@@ -36,7 +32,19 @@ def token_freqs(tokens): # returns {token: count} dict of str->int
 	
 	return ret
 
+def IndexToText(inverted_index):
+	ret = ""
+	
+	for k, v in sorted(inverted_index.items(), reverse=True):
+		ret = ret + '["' + str(k) + '",' + str(v).replace(' ', '') + ']\n'
+	
+	return ret
+
 def BuildIndexFragments(corpus_folder):
+	if (os.path.exists(index_folder)):
+		shutil.rmtree(index_folder)
+	os.makedirs(index_folder)
+	
 	inverted_index = defaultdict(lambda: [])
 	url_dict = {}
 	
@@ -60,38 +68,66 @@ def BuildIndexFragments(corpus_folder):
 		
 		if (doc_id % DOCS_PER_FRAGMENT == DOCS_PER_FRAGMENT - 1):
 			with open(os.path.join(index_folder, 'fragment' + str(frag_id) + '.json'), 'w') as fp:
-				json.dump(inverted_index, fp, indent=True)
+					fp.write(IndexToText(inverted_index))
 			
 			frag_id += 1
-			inverted_index = defaultdict(lambda: [])
+			inverted_index.clear()
 		
 		print('\rProcessing document number: ' + str(doc_id) + ', seconds: ' + str(time.time() - start_time), end='')
 		doc_id += 1
 		if (doc_id >= MAX_DOCUMENTS):
 			break
 	
-	if (doc_id % DOCS_PER_FRAGMENT != DOCS_PER_FRAGMENT - 1):
+	if (inverted_index):
 		with open(os.path.join(index_folder, 'fragment' + str(frag_id) + '.json'), 'w') as fp:
-			json.dump(inverted_index, fp, indent=True)
+			fp.write(IndexToText(inverted_index))
+			inverted_index.clear()
 	
 	print('\nSaved ' + str(frag_id+1) + ' inverted index fragments.')
 	
 	with open('url_dict.json', 'w') as fp:
 		json.dump(url_dict, fp, indent=True)
-	print('\nSaved url_dict.json')
+	print('Saved url_dict.json')
 	
-	return inverted_index, url_dict
+	return
 
 def main():
-	inverted_index, url_dict = BuildIndexFragments(corpus_folder)
+	BuildIndexFragments(corpus_folder)
 	
-	with open('index.json', 'w') as fp:
-		json.dump(inverted_index, fp, indent=True)
+	files = []
+	for filename in glob.iglob(index_folder + '/*.json', recursive=True):
+		files.append(open(filename, 'r'))
 	
-	# frag_list = []
-	# for filename in glob.iglob(index_folder + '/*.json'):
-	# 	frag_list.append(ijson.items(open(filename, 'r'), ''))
-	# 
-	# print(frag_list[0].items)
+	curr_lines = [f.readline() for f in files]
+	
+	index_file = open('index.json', 'w')
+	
+	phrase_count = 0
+	
+	seek_dict = {}
+	
+	while (all([line != '' for line in curr_lines])):
+		curr_phrases = [json.loads(l) for l in curr_lines]
+		curr_phrase = sorted(curr_phrases, key=lambda x: x[0], reverse=True)[0][0]
+		active = [phrase[0] == curr_phrase for phrase in curr_phrases]
+		
+		line = []
+		for i in range(len(active)):
+			if (not active[i]): continue
+			
+			line = line + (curr_phrases[i][1])
+			
+			curr_lines[i] = files[i].readline()
+		
+		seek_dict[curr_phrase] = index_file.tell()
+		
+		# index_file.write(IndexToText({curr_phrase:line}))
+		index_file.write(str(line).replace(' ', '') + '\n')
+		
+		print('\rProcessed phrase: ' + str(phrase_count) + ', seconds: ' + str(time.time() - start_time), end='')
+		phrase_count += 1
+	
+	with open('seek_dict.json', 'w') as fp:
+		json.dump(seek_dict, fp, indent=True)\
 
 main()
