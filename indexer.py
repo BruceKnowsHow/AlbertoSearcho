@@ -5,7 +5,6 @@ import re
 from collections import defaultdict
 import time
 import shutil
-import ijson
 import glob
 import math
 
