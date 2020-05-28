@@ -7,6 +7,7 @@ import time
 import shutil
 import ijson
 import glob
+import math
 
 corpus_folder = os.path.join(os.getcwd(), 'developer')
 index_folder = os.path.join(os.getcwd(), 'index')
@@ -58,7 +59,10 @@ def BuildIndexFragments(corpus_folder):
 		
 		freq_dict = token_freqs(text_tokens)
 		
+		total_tf = sum((1 + math.log10(v))**2 for v in freq_dict.values())**0.5
+		
 		for k,v in freq_dict.items():
+			v = int((1 + math.log10(v)) / total_tf * 100000000) / 100000000.0
 			posting = [doc_id, v]    # THIS IS THE POSTING
 			inverted_index[k].append(posting)
 			url_dict[doc_id] = json_dict['url']
@@ -70,7 +74,7 @@ def BuildIndexFragments(corpus_folder):
 			frag_id += 1
 			inverted_index.clear()
 		
-		print('\rProcessing document number: ' + str(doc_id) + ', seconds: ' + str(time.time() - start_time), end='')
+		print('\rProcessing document number: ' + str(doc_id) + ', seconds: ' + ('%.2f' % (time.time() - start_time)), end='')
 		doc_id += 1
 		if (doc_id >= MAX_DOCUMENTS):
 			break
@@ -120,7 +124,7 @@ def main():
 		
 		index_file.write(str(line).replace(' ', '') + '\n')
 		
-		print('\rProcessed phrase: ' + str(phrase_count) + ', seconds: ' + str(time.time() - start_time), end='')
+		print('\rProcessed phrase: ' + str(phrase_count) + ', seconds: ' + ('%.2f' % (time.time() - start_time)), end='')
 		phrase_count += 1
 	
 	with open('seek_dict.json', 'w') as fp:
