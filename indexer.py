@@ -39,6 +39,17 @@ def WriteIndexFragment(inverted_index, filename):
 		for k, v in sorted(inverted_index.items(), reverse=True):
 			fp.write('["' + str(k) + '",' + str(v).replace(' ', '') + ']\n')
 
+def GetBoosterText(soup):
+	ret = []
+	
+	if (soup.title and soup.title.string): ret = ret + (tokenize(soup.title.string))
+	if (soup.h1 and soup.h1.string): ret = ret + (tokenize(soup.h1.string))
+	if (soup.h2 and soup.h2.string): ret = ret + (tokenize(soup.h2.string))
+	if (soup.h3 and soup.h3.string): ret = ret + (tokenize(soup.h3.string))
+	if (soup.b and soup.b.string): ret = ret + (tokenize(soup.b.string))
+	
+	return ret
+
 def BuildIndexFragments(corpus_folder):
 	if (os.path.exists(index_folder)):
 		shutil.rmtree(index_folder)
@@ -56,7 +67,7 @@ def BuildIndexFragments(corpus_folder):
 
 		json_dict = json.loads(filetext)
 		soup = BeautifulSoup(json_dict['content'], 'html.parser')
-		text_tokens = tokenize(soup.text)
+		text_tokens = tokenize(soup.text) + GetBoosterText(soup)
 		
 		freq_dict = token_freqs(text_tokens)
 		
