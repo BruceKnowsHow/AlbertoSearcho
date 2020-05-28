@@ -18,14 +18,7 @@ def token_freqs(tokens): # returns {token: count} dict of str->int
     return ret
 
 def SparseDot(vec_dict1, vec_dict2):
-    ret = 0.0
-    
-    for k,v in vec_dict1.items():
-        if k not in vec_dict2: continue
-        
-        ret += v * vec_dict2[k]
-    
-    return ret
+    return sum((v * vec_dict2[k]) for k,v in vec_dict1.items() if k in vec_dict2)
 
 def main():
     url_dict = {}
@@ -60,14 +53,17 @@ def main():
             v = (1 + math.log10(v)) * (math.log10(N / len(postings))) / total_tf_idf
             freq_dict[k] = v
             
+            count = 0
             for posting in postings:
+                if count > 1000: break
+                count += 1
                 if posting[0] not in docs:
                     docs[posting[0]] = {}
                 
                 docs[posting[0]][k] = posting[1]
         
         for k,v in docs.items():
-            docs[k] = SparseDot(v, freq_dict)
+            docs[k] = SparseDot(freq_dict, v)
         
         docs = sorted(docs.items(), key=lambda x: x[1], reverse=True)
         
