@@ -32,13 +32,10 @@ def token_freqs(tokens): # returns {token: count} dict of str->int
 	
 	return ret
 
-def IndexToText(inverted_index):
-	ret = ""
-	
-	for k, v in sorted(inverted_index.items(), reverse=True):
-		ret = ret + '["' + str(k) + '",' + str(v).replace(' ', '') + ']\n'
-	
-	return ret
+def WriteIndexFragment(inverted_index, filename):
+	with open(filename, 'w') as fp:
+		for k, v in sorted(inverted_index.items(), reverse=True):
+			fp.write('["' + str(k) + '",' + str(v).replace(' ', '') + ']\n')
 
 def BuildIndexFragments(corpus_folder):
 	if (os.path.exists(index_folder)):
@@ -67,8 +64,8 @@ def BuildIndexFragments(corpus_folder):
 			url_dict[doc_id] = json_dict['url']
 		
 		if (doc_id % DOCS_PER_FRAGMENT == DOCS_PER_FRAGMENT - 1):
-			with open(os.path.join(index_folder, 'fragment' + str(frag_id) + '.json'), 'w') as fp:
-					fp.write(IndexToText(inverted_index))
+			fragname = os.path.join(index_folder, 'fragment' + str(frag_id) + '.json')
+			WriteIndexFragment(inverted_index, fragname)
 			
 			frag_id += 1
 			inverted_index.clear()
@@ -79,9 +76,9 @@ def BuildIndexFragments(corpus_folder):
 			break
 	
 	if (inverted_index):
-		with open(os.path.join(index_folder, 'fragment' + str(frag_id) + '.json'), 'w') as fp:
-			fp.write(IndexToText(inverted_index))
-			inverted_index.clear()
+		fragname = os.path.join(index_folder, 'fragment' + str(frag_id)) + '.json'
+		WriteIndexFragment(inverted_index, fragname)
+		inverted_index.clear()
 	
 	print('\nSaved ' + str(frag_id+1) + ' inverted index fragments.')
 	
@@ -121,7 +118,6 @@ def main():
 		
 		seek_dict[curr_phrase] = index_file.tell()
 		
-		# index_file.write(IndexToText({curr_phrase:line}))
 		index_file.write(str(line).replace(' ', '') + '\n')
 		
 		print('\rProcessed phrase: ' + str(phrase_count) + ', seconds: ' + str(time.time() - start_time), end='')
