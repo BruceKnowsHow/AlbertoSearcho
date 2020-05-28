@@ -1,10 +1,12 @@
 import sys
 import json
 import time
-import numpy as np
 import math
+from nltk.stem import *
 
 index_file = 'index.json'
+
+stemmer = PorterStemmer()
 
 def token_freqs(tokens): # returns {token: count} dict of str->int
     ret = {}
@@ -36,7 +38,7 @@ def main():
     while True:
         print("Please enter a query")
         
-        search_terms = input().lower().split()
+        search_terms = [stemmer.stem(token) for token in input().lower().split()]
         
         start_time = time.time()
         

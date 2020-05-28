@@ -7,19 +7,21 @@ import time
 import shutil
 import glob
 import math
+from nltk.stem import *
 
 corpus_folder = os.path.join(os.getcwd(), 'developer')
 index_folder = os.path.join(os.getcwd(), 'index')
 
-MAX_DOCUMENTS = 100000
+MAX_DOCUMENTS = 1000
 DOCS_PER_FRAGMENT = 500
 
 start_time = time.time()
 
+stemmer = PorterStemmer()
 def tokenize(text):
 	text = re.sub('[^A-Za-z0-9]+', ' ', text)
 	
-	return text.lower().split()
+	return [stemmer.stem(token) for token in text.lower().split()]
 
 def token_freqs(tokens): # returns {token: count} dict of str->int
 	ret = {}
