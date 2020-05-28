@@ -1,8 +1,31 @@
 import sys
 import json
 import time
+import numpy as np
+import math
 
 index_file = 'index.json'
+
+def token_freqs(tokens): # returns {token: count} dict of str->int
+    ret = {}
+    
+    for token in tokens:
+        if (token not in ret):
+            ret[token] = 1
+        else:
+            ret[token] = ret[token] + 1
+    
+    return ret
+
+def SparseDot(vec_dict1, vec_dict2):
+    ret = 0.0
+    
+    for k,v in vec_dict1.items():
+        if k not in vec_dict2: continue
+        
+        ret += v * vec_dict2[k]
+    
+    return ret
 
 def main():
     url_dict = {}
@@ -13,44 +36,51 @@ def main():
     with open('seek_dict.json', 'r') as fp:
         seek_dict = json.loads(fp.read())
     
+    N = len(url_dict)
     
     inverted_index = open(index_file, 'r')
     
-    print("Please enter a query")
-    
-    search_terms = input().lower().split()
-    
-    start_time = time.time()
-    
-    rows = []
-    for term in search_terms:
-        if term not in seek_dict:
-            print("No results.")
-            quit()
+    while True:
+        print("Please enter a query")
         
-        inverted_index.seek(seek_dict[term])
+        search_terms = input().lower().split()
         
-        row = json.loads(inverted_index.readline())
+        start_time = time.time()
         
-        rows.append(row)
-    
-    for row in rows[1:]:
-        for elem0 in rows[0]:
-            found = False
+        freq_dict = token_freqs(search_terms)
+        freq_dict = {k: freq_dict[k] for k in freq_dict.keys() & seek_dict.keys()}
+        
+        total_tf_idf = sum((1 + math.log10(v))**2 for v in freq_dict.values())**0.5
+        
+        docs = {}
+        for k,v in freq_dict.items():
+            inverted_index.seek(seek_dict[k])
+            postings = json.loads(inverted_index.readline())
             
-            for elem1 in row:
-                if (elem0[0] == elem1[0]):
-                    found = True
-                    break
+            v = (1 + math.log10(v)) * (math.log10(N / len(postings))) / total_tf_idf
+            freq_dict[k] = v
             
-            if (not found):
-                rows[0].remove(elem0)
-    
-    for elem in rows[0]:
-        print(url_dict[str(elem[0])])
-    
-    print()
-    print("(Response time: " + str(int((time.time() - start_time) * 1000)) + "ms)")
-    
+            for posting in postings:
+                if posting[0] not in docs:
+                    docs[posting[0]] = {}
+                
+                docs[posting[0]][k] = posting[1]
+        
+        for k,v in docs.items():
+            docs[k] = SparseDot(v, freq_dict)
+        
+        docs = sorted(docs.items(), key=lambda x: x[1], reverse=True)
+        
+        timeTaken = str(int((time.time() - start_time) * 1000))
+        
+        count = 0
+        for doc in docs:
+            if count > 10: break
+            print(str(round(doc[1], 8)) + ': ' + url_dict[str(doc[0])])
+            count += 1
+        
+        print()
+        print("(Discovered " + str(len(docs)) + ' documents in ' + timeTaken + "ms)")
+        
 
 main()

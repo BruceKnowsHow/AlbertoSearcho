@@ -61,7 +61,7 @@ def BuildIndexFragments(corpus_folder):
 		total_tf = sum((1 + math.log10(v))**2 for v in freq_dict.values())**0.5
 		
 		for k,v in freq_dict.items():
-			v = int((1 + math.log10(v)) / total_tf * 100000000) / 100000000.0
+			v = round((1 + math.log10(v)) / total_tf, 9)
 			posting = [doc_id, v]    # THIS IS THE POSTING
 			inverted_index[k].append(posting)
 			url_dict[doc_id] = json_dict['url']
@@ -120,6 +120,8 @@ def main():
 			curr_lines[i] = files[i].readline()
 		
 		seek_dict[curr_phrase] = index_file.tell()
+		
+		line = sorted(line, key=lambda x: x[1], reverse=True)
 		
 		index_file.write(str(line).replace(' ', '') + '\n')
 		
