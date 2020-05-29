@@ -12,7 +12,7 @@ from nltk.stem import *
 corpus_folder = os.path.join(os.getcwd(), 'developer')
 index_folder = os.path.join(os.getcwd(), 'index')
 
-MAX_DOCUMENTS = 1000
+MAX_DOCUMENTS = 100000
 DOCS_PER_FRAGMENT = 500
 
 start_time = time.time()
@@ -42,11 +42,13 @@ def WriteIndexFragment(inverted_index, filename):
 def GetBoosterText(soup):
 	ret = []
 	
-	if (soup.title and soup.title.string): ret = ret + (tokenize(soup.title.string))
-	if (soup.h1 and soup.h1.string): ret = ret + (tokenize(soup.h1.string))
-	if (soup.h2 and soup.h2.string): ret = ret + (tokenize(soup.h2.string))
-	if (soup.h3 and soup.h3.string): ret = ret + (tokenize(soup.h3.string))
-	if (soup.b and soup.b.string): ret = ret + (tokenize(soup.b.string))
+	if (soup.title and soup.title.string): ret = ret + (tokenize(soup.title.string)) * 5
+	if (soup.h1 and soup.h1.string): ret = ret + (tokenize(soup.h1.string)) * 4
+	if (soup.h2 and soup.h2.string): ret = ret + (tokenize(soup.h2.string)) * 4
+	if (soup.h3 and soup.h3.string): ret = ret + (tokenize(soup.h3.string)) * 3
+	if (soup.h4 and soup.h4.string): ret = ret + (tokenize(soup.h4.string)) * 3
+	if (soup.b and soup.b.string): ret = ret + (tokenize(soup.b.string)) * 2
+	if (soup.strong and soup.strong.string): ret = ret + (tokenize(soup.strong.string)) * 2
 	
 	return ret
 

@@ -6,6 +6,9 @@ from nltk.stem import *
 
 index_file = 'index.json'
 
+DOC_THRESHOLD = 1000
+PRINT_DOCS = 10
+
 stemmer = PorterStemmer()
 
 def token_freqs(tokens): # returns {token: count} dict of str->int
@@ -57,7 +60,7 @@ def main():
             
             count = 0
             for posting in postings:
-                if count > 1000: break
+                if count > DOC_THRESHOLD: break
                 count += 1
                 if posting[0] not in docs:
                     docs[posting[0]] = {}
@@ -73,7 +76,7 @@ def main():
         
         count = 0
         for doc in docs:
-            if count > 10: break
+            if count > PRINT_DOCS: break
             print(str(round(doc[1], 8)) + ': ' + url_dict[str(doc[0])])
             count += 1
         
